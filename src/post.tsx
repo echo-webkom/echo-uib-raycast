@@ -4,6 +4,7 @@ import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { isErrorMessage } from "./lib/error";
 import PostAPI, { Post, PostOverview } from "./lib/post";
+import capitalize from "./utils/string-helpers";
 
 const Post = () => {
   const { push } = useNavigation();
@@ -105,10 +106,13 @@ const PostBySlug = ({ slug }: { slug: string }) => {
         <Detail
           isLoading={isLoading}
           markdown={markdown}
-          navigationTitle={post?.title}
+          navigationTitle={post.title}
           metadata={
             <Detail.Metadata>
-              <Detail.Metadata.Label title="Publisert av" text={post?.author} />
+              <Detail.Metadata.Label
+                title="Publisert av"
+                text={capitalize(post.author)}
+              />
               <Detail.Metadata.Label
                 title="Dato"
                 text={format(new Date(post._createdAt), "dd. MMM yyyy", {

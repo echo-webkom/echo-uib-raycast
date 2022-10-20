@@ -9,6 +9,7 @@ import HappeningAPI, {
   HappeningOverview,
   HappeningType,
 } from "./lib/happening";
+import capitalize from "./utils/string-helpers";
 
 interface Props {
   type: HappeningType;
@@ -174,7 +175,7 @@ const HappeningBySlug = ({
             <Detail.Metadata>
               <Detail.Metadata.Label
                 title="Publisert av"
-                text={happening.author}
+                text={capitalize(happening.author)}
               />
               {happening.date && (
                 <Detail.Metadata.Label

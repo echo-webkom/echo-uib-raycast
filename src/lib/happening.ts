@@ -1,4 +1,12 @@
-import { string, record, decodeType, literal, union, array, nil } from "typescript-json-decoder";
+import {
+  string,
+  record,
+  decodeType,
+  literal,
+  union,
+  array,
+  nil,
+} from "typescript-json-decoder";
 import ErrorMessage from "./error";
 import SanityClient from "./sanity";
 
@@ -27,12 +35,14 @@ const happeningTypeDecoder = union(literal("BEDPRES"), literal("EVENT"));
 type HappeningType = decodeType<typeof happeningTypeDecoder>;
 
 const HappeningAPI = {
-  getAllByType: async (type: HappeningType): Promise<Array<HappeningOverview> | ErrorMessage> => {
+  getAllByType: async (
+    type: HappeningType
+  ): Promise<Array<HappeningOverview> | ErrorMessage> => {
     try {
       const query = `
         *[_type == "happening" && happeningType == "${type}" && !(_id in path('drafts.**'))] | order(date desc) {
           _createdAt,
-          "author": author -> name,
+          "author": studentGroupName,
           title,
           "slug": slug.current,
           date,
@@ -44,16 +54,19 @@ const HappeningAPI = {
       return array(happeningOverviewDecoder)(resp);
     } catch (error) {
       return {
-        message: `Failed to get happening of type: ${type}.`,
+        message: `Failed to get happening of type: ${type}. Error: ${error}`,
       };
     }
   },
-  getHappeningBySlug: async (type: string, slug: string): Promise<Happening | ErrorMessage> => {
+  getHappeningBySlug: async (
+    type: string,
+    slug: string
+  ): Promise<Happening | ErrorMessage> => {
     try {
       const query = `
         *[_type == "happening" && happeningType == "${type}" && slug.current == "${slug}" && !(_id in path('drafts.**'))] | order(date asc) {
           _createdAt,
-          "author": author -> name,
+          "author": studentGroupName,
           title,
           "body": body.no,
           "slug": slug.current,
@@ -68,7 +81,7 @@ const HappeningAPI = {
       return happeningDecoder(resp[0]);
     } catch (error) {
       return {
-        message: `Failed to get happening of type: ${type} with slug: ${slug}.`,
+        message: `Failed to get happening of type: ${type} with slug: ${slug}. Error: ${error}`,
       };
     }
   },
