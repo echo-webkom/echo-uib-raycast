@@ -3,22 +3,25 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { isErrorMessage } from "./lib/error";
-import PostAPI, { Post, PostOverview } from "./lib/post";
-import capitalize from "./utils/string-helpers";
+import { PostOverview, getPosts } from "./lib/sanity/post";
+import { PostBySlug } from "./components/post-slug";
 
-const Post = () => {
+export function Posts() {
   const { push } = useNavigation();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>();
   const [posts, setPosts] = useState<Array<PostOverview>>();
   const [filter, setFilter] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const events = await PostAPI.getPosts();
+      const events = await getPosts();
+
+      setError(undefined);
 
       if (isErrorMessage(events)) {
-        setPosts([]);
+        setError(events.message);
       } else {
         if (filter === "newest") {
           setPosts(events);
@@ -32,6 +35,10 @@ const Post = () => {
 
     void fetchPosts();
   }, [filter]);
+
+  if (error) {
+    <Detail markdown={error} />;
+  }
 
   return (
     <>
@@ -47,7 +54,7 @@ const Post = () => {
               <List.Dropdown.Item title="Eldste" value="oldest" />
             </List.Dropdown>
           }
-          enableFiltering
+          filtering
         >
           <List.Section title="Innlegg">
             {posts.map((post, i) => (
@@ -72,65 +79,4 @@ const Post = () => {
       )}
     </>
   );
-};
-
-const PostBySlug = ({ slug }: { slug: string }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [post, setPost] = useState<Post | null>();
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      const post = await PostAPI.getPostBySlug(slug);
-
-      if (isErrorMessage(post)) {
-        setPost(null);
-      } else {
-        setPost(post);
-      }
-
-      setIsLoading(false);
-    };
-
-    void fetchPost();
-  }, []);
-
-  const markdown = `
-  # ${post?.title}
-
-  ${post?.body}
-  `;
-
-  return (
-    <>
-      {post && (
-        <Detail
-          isLoading={isLoading}
-          markdown={markdown}
-          navigationTitle={post.title}
-          metadata={
-            <Detail.Metadata>
-              <Detail.Metadata.Label
-                title="Publisert av"
-                text={capitalize(post.author)}
-              />
-              <Detail.Metadata.Label
-                title="Dato"
-                text={format(new Date(post._createdAt), "dd. MMM yyyy", {
-                  locale: nb,
-                })}
-              />
-              <Detail.Metadata.Separator />
-              <Detail.Metadata.Link
-                title="Nettside"
-                text="Vis på echo.uib.no"
-                target={`https://echo.uib.no/posts/${slug}`}
-              />
-            </Detail.Metadata>
-          }
-        />
-      )}
-    </>
-  );
-};
-
-export default Post;
+}

@@ -4,7 +4,7 @@ interface Props {
   message: string;
 }
 
-const ErrorDetail = ({ message }: Props) => {
+export const ErrorDetail = ({ message }: Props) => {
   const markdown = `
   # Error
 
@@ -13,5 +13,3 @@ const ErrorDetail = ({ message }: Props) => {
 
   return <Detail markdown={markdown} />;
 };
-
-export default ErrorDetail;

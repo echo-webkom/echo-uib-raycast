@@ -1,8 +1,8 @@
 import { ActionPanel, Action, useNavigation, List } from "@raycast/api";
-import Happening from "./happening";
-import Post from "./post";
+import { Happenings } from "./happening";
+import { Posts } from "./post";
 
-const Command = () => {
+export default function Command() {
   const { push } = useNavigation();
 
   return (
@@ -13,7 +13,7 @@ const Command = () => {
           <ActionPanel>
             <Action
               title="Vis alle arrangementer"
-              onAction={() => push(<Happening type="EVENT" />)}
+              onAction={() => push(<Happenings type="event" />)}
             />
           </ActionPanel>
         }
@@ -24,7 +24,7 @@ const Command = () => {
           <ActionPanel>
             <Action
               title="Vis alle bedriftspresentasjoner"
-              onAction={() => push(<Happening type="BEDPRES" />)}
+              onAction={() => push(<Happenings type="bedpres" />)}
             />
           </ActionPanel>
         }
@@ -33,12 +33,10 @@ const Command = () => {
         title="📝 Innlegg"
         actions={
           <ActionPanel>
-            <Action title="Vis alle innlegg" onAction={() => push(<Post />)} />
+            <Action title="Vis alle innlegg" onAction={() => push(<Posts />)} />
           </ActionPanel>
         }
       />
     </List>
   );
-};
-
-export default Command;
+}

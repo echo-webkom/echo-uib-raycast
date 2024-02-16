@@ -1,21 +1,19 @@
-import { Action, ActionPanel, Detail, List, useNavigation } from "@raycast/api";
-import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { List } from "@raycast/api";
 import { useState, useEffect } from "react";
-import ErrorDetail from "./components/error-detail";
+import { ErrorDetail } from "./components/error-detail";
 import { isErrorMessage } from "./lib/error";
-import HappeningAPI, {
-  Happening,
+import { HappeningPreview } from "./components/happenings-preview";
+import {
   HappeningOverview,
   HappeningType,
-} from "./lib/happening";
-import capitalize from "./utils/string-helpers";
+  getAllByType,
+} from "./lib/sanity/happening";
 
 interface Props {
   type: HappeningType;
 }
 
-const Happening = ({ type }: Props) => {
+export function Happenings({ type }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [upcoming, setUpcoming] = useState<Array<HappeningOverview>>();
   const [previous, setPrevious] = useState<Array<HappeningOverview>>();
@@ -24,18 +22,18 @@ const Happening = ({ type }: Props) => {
 
   useEffect(() => {
     const fetchHappenings = async () => {
-      const happenings = await HappeningAPI.getAllByType(type);
+      const happenings = await getAllByType(type);
 
       if (isErrorMessage(happenings)) {
         setError(happenings.message);
       } else {
         const upcoming = happenings.filter((h) => {
-          const date = new Date(h.date);
+          const date = new Date(h.date || "");
           return date.getTime() > new Date().getTime();
         });
 
         const previous = happenings.filter((h) => {
-          const date = new Date(h.date);
+          const date = new Date(h.date || "");
           return date.getTime() < new Date().getTime();
         });
 
@@ -67,7 +65,7 @@ const Happening = ({ type }: Props) => {
               <List.Dropdown.Item title="Kommende" value="upcoming" />
             </List.Dropdown>
           }
-          enableFiltering
+          filtering
         >
           {filter === "upcoming" && (
             <List.Section title="Kommende">
@@ -101,105 +99,4 @@ const Happening = ({ type }: Props) => {
       )}
     </>
   );
-};
-
-const HappeningPreview = ({
-  type,
-  happening,
-}: {
-  type: HappeningType;
-  happening: HappeningOverview;
-}) => {
-  const { push } = useNavigation();
-
-  return (
-    <List.Item
-      title={happening.title}
-      subtitle={format(new Date(happening.date), "d. MMMM yyyy", {
-        locale: nb,
-      })}
-      actions={
-        <ActionPanel>
-          <Action
-            title="Vis arrangement"
-            onAction={() =>
-              push(<HappeningBySlug type={type} slug={happening.slug} />)
-            }
-          />
-        </ActionPanel>
-      }
-    />
-  );
-};
-
-const HappeningBySlug = ({
-  type,
-  slug,
-}: {
-  type: HappeningType;
-  slug: string;
-}) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [happening, setHappening] = useState<Happening | null>();
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      const post = await HappeningAPI.getHappeningBySlug(type, slug);
-
-      if (isErrorMessage(post)) {
-        setHappening(null);
-      } else {
-        setHappening(post);
-      }
-
-      setIsLoading(false);
-    };
-
-    void fetchPost();
-  }, []);
-
-  const markdown = `
-  # ${happening?.title}
-
-  ${happening?.body}
-  `;
-
-  return (
-    <>
-      {happening && (
-        <Detail
-          isLoading={isLoading}
-          markdown={markdown}
-          navigationTitle={happening.title}
-          metadata={
-            <Detail.Metadata>
-              <Detail.Metadata.Label
-                title="Publisert av"
-                text={capitalize(happening.author)}
-              />
-              {happening.date && (
-                <Detail.Metadata.Label
-                  title="Dato"
-                  text={format(new Date(happening.date), "dd. MMM yyyy", {
-                    locale: nb,
-                  })}
-                />
-              )}
-              {happening.location && (
-                <Detail.Metadata.Label title="Sted" text={happening.location} />
-              )}
-              <Detail.Metadata.Separator />
-              <Detail.Metadata.Link
-                title="Nettside"
-                text="Vis på echo.uib.no"
-                target={`https://echo.uib.no/event/${slug}`}
-              />
-            </Detail.Metadata>
-          }
-        />
-      )}
-    </>
-  );
-};
-
-export default Happening;
+}
